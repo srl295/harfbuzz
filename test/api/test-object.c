@@ -53,6 +53,17 @@ create_buffer_inert (void)
 }
 
 static void *
+create_set (void)
+{
+  return hb_set_create ();
+}
+static void *
+create_set_inert (void)
+{
+  return NULL;
+}
+
+static void *
 create_face (void)
 {
   hb_blob_t *blob = (hb_blob_t *) create_blob ();
@@ -154,6 +165,7 @@ typedef struct {
 static const object_t objects[] =
 {
   OBJECT_WITHOUT_IMMUTABILITY (buffer),
+  OBJECT_WITHOUT_IMMUTABILITY (set),
   OBJECT_WITH_IMMUTABILITY (blob),
   OBJECT_WITH_IMMUTABILITY (face),
   OBJECT_WITH_IMMUTABILITY (font),
@@ -219,7 +231,7 @@ test_object (void)
   for (i = 0; i < G_N_ELEMENTS (objects); i++) {
     const object_t *o = &objects[i];
     void *obj;
-    hb_user_data_key_t key[2];
+    hb_user_data_key_t key[1001];
 
     {
       unsigned int j;

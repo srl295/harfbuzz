@@ -53,7 +53,7 @@ enum {
 };
 
 static OT::SubstLookup *
-arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan,
+arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUSED,
 					  hb_font_t *font,
 					  unsigned int feature_index)
 {
@@ -103,7 +103,7 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan,
 }
 
 static OT::SubstLookup *
-arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan,
+arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UNUSED,
 					    hb_font_t *font)
 {
   OT::GlyphID first_glyphs[ARRAY_LENGTH_CONST (ligature_table)];
@@ -244,7 +244,7 @@ arabic_fallback_plan_shape (arabic_fallback_plan_t *fallback_plan,
 {
   for (unsigned int i = 0; i < ARABIC_NUM_FALLBACK_FEATURES; i++)
     if (fallback_plan->lookup_array[i]) {
-      OT::hb_apply_context_t c (font, buffer, fallback_plan->mask_array[i]);
+      OT::hb_apply_context_t c (0, font, buffer, fallback_plan->mask_array[i], true/*auto_joiners*/);
       fallback_plan->lookup_array[i]->apply_string (&c, &fallback_plan->digest_array[i]);
     }
 }

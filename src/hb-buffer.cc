@@ -35,6 +35,29 @@
 #define HB_DEBUG_BUFFER (HB_DEBUG+0)
 #endif
 
+
+hb_bool_t
+hb_segment_properties_equal (const hb_segment_properties_t *a,
+			     const hb_segment_properties_t *b)
+{
+  return a->direction == b->direction &&
+	 a->script    == b->script    &&
+	 a->language  == b->language  &&
+	 a->reserved1 == b->reserved1 &&
+	 a->reserved2 == b->reserved2;
+
+}
+
+unsigned int
+hb_segment_properties_hash (const hb_segment_properties_t *p)
+{
+  return (unsigned int) p->direction ^
+	 (unsigned int) p->script ^
+	 (intptr_t) (p->language);
+}
+
+
+
 /* Here is how the buffer works internally:
  *
  * There are two info pointers: info and out_info.  They always have
@@ -142,8 +165,18 @@ hb_buffer_t::reset (void)
   hb_unicode_funcs_destroy (unicode);
   unicode = hb_unicode_funcs_get_default ();
 
-  hb_segment_properties_t default_props = _HB_BUFFER_PROPS_DEFAULT;
+  clear ();
+}
+
+void
+hb_buffer_t::clear (void)
+{
+  if (unlikely (hb_object_is_inert (this)))
+    return;
+
+  hb_segment_properties_t default_props = HB_SEGMENT_PROPERTIES_DEFAULT;
   props = default_props;
+  flags = HB_BUFFER_FLAGS_DEFAULT;
 
   content_type = HB_BUFFER_CONTENT_TYPE_INVALID;
   in_error = false;
@@ -165,7 +198,6 @@ hb_buffer_t::reset (void)
 
 void
 hb_buffer_t::add (hb_codepoint_t  codepoint,
-		  hb_mask_t       mask,
 		  unsigned int    cluster)
 {
   hb_glyph_info_t *glyph;
@@ -176,11 +208,22 @@ hb_buffer_t::add (hb_codepoint_t  codepoint,
 
   memset (glyph, 0, sizeof (*glyph));
   glyph->codepoint = codepoint;
-  glyph->mask = mask;
+  glyph->mask = 1;
   glyph->cluster = cluster;
 
   len++;
 }
+
+void
+hb_buffer_t::add_info (const hb_glyph_info_t &glyph_info)
+{
+  if (unlikely (!ensure (len + 1))) return;
+
+  info[len] = glyph_info;
+
+  len++;
+}
+
 
 void
 hb_buffer_t::remove_output (void)
@@ -283,7 +326,7 @@ hb_buffer_t::output_glyph (hb_codepoint_t glyph_index)
 }
 
 void
-hb_buffer_t::output_info (hb_glyph_info_t &glyph_info)
+hb_buffer_t::output_info (const hb_glyph_info_t &glyph_info)
 {
   if (unlikely (!make_room_for (0, 1))) return;
 
@@ -459,10 +502,10 @@ hb_buffer_t::merge_out_clusters (unsigned int start,
 }
 
 void
-hb_buffer_t::guess_properties (void)
+hb_buffer_t::guess_segment_properties (void)
 {
-  if (unlikely (!len)) return;
-  assert (content_type == HB_BUFFER_CONTENT_TYPE_UNICODE);
+  assert (content_type == HB_BUFFER_CONTENT_TYPE_UNICODE ||
+	  (!len && content_type == HB_BUFFER_CONTENT_TYPE_INVALID));
 
   /* If script is set to INVALID, guess from buffer contents */
   if (props.script == HB_SCRIPT_INVALID) {
@@ -561,7 +604,7 @@ void hb_buffer_t::deallocate_var_all (void)
 /* Public API */
 
 hb_buffer_t *
-hb_buffer_create ()
+hb_buffer_create (void)
 {
   hb_buffer_t *buffer;
 
@@ -580,7 +623,8 @@ hb_buffer_get_empty (void)
     HB_OBJECT_HEADER_STATIC,
 
     const_cast<hb_unicode_funcs_t *> (&_hb_unicode_funcs_nil),
-    _HB_BUFFER_PROPS_DEFAULT,
+    HB_SEGMENT_PROPERTIES_DEFAULT,
+    HB_BUFFER_FLAGS_DEFAULT,
 
     HB_BUFFER_CONTENT_TYPE_INVALID,
     true, /* in_error */
@@ -715,11 +759,51 @@ hb_buffer_get_language (hb_buffer_t *buffer)
   return buffer->props.language;
 }
 
+void
+hb_buffer_set_segment_properties (hb_buffer_t *buffer,
+				  const hb_segment_properties_t *props)
+{
+  if (unlikely (hb_object_is_inert (buffer)))
+    return;
+
+  buffer->props = *props;
+}
+
+void
+hb_buffer_get_segment_properties (hb_buffer_t *buffer,
+				  hb_segment_properties_t *props)
+{
+  *props = buffer->props;
+}
+
+
+void
+hb_buffer_set_flags (hb_buffer_t       *buffer,
+		     hb_buffer_flags_t  flags)
+{
+  if (unlikely (hb_object_is_inert (buffer)))
+    return;
+
+  buffer->flags = flags;
+}
+
+hb_buffer_flags_t
+hb_buffer_get_flags (hb_buffer_t *buffer)
+{
+  return buffer->flags;
+}
+
 
 void
 hb_buffer_reset (hb_buffer_t *buffer)
 {
   buffer->reset ();
+}
+
+void
+hb_buffer_clear_contents (hb_buffer_t *buffer)
+{
+  buffer->clear ();
 }
 
 hb_bool_t
@@ -737,10 +821,9 @@ hb_buffer_allocation_successful (hb_buffer_t  *buffer)
 void
 hb_buffer_add (hb_buffer_t    *buffer,
 	       hb_codepoint_t  codepoint,
-	       hb_mask_t       mask,
 	       unsigned int    cluster)
 {
-  buffer->add (codepoint, mask, cluster);
+  buffer->add (codepoint, cluster);
   buffer->clear_context (1);
 }
 
@@ -814,9 +897,9 @@ hb_buffer_reverse_clusters (hb_buffer_t *buffer)
 }
 
 void
-hb_buffer_guess_properties (hb_buffer_t *buffer)
+hb_buffer_guess_segment_properties (hb_buffer_t *buffer)
 {
-  buffer->guess_properties ();
+  buffer->guess_segment_properties ();
 }
 
 template <typename T>
@@ -869,7 +952,7 @@ hb_buffer_add_utf (hb_buffer_t  *buffer,
     hb_codepoint_t u;
     const T *old_next = next;
     next = hb_utf_next (next, end, &u);
-    buffer->add (u, 1,  old_next - (const T *) text);
+    buffer->add (u, old_next - (const T *) text);
   }
 
   /* Add post-context */

@@ -1,3 +1,215 @@
+Overview of changes leading to 0.9.13
+Thursday, February 25, 2013
+=====================================
+
+- Build fixes.
+- Ngapi HarfBuzz Hackfest in London (February 2013):
+  * Fixed all known Indic bugs,
+  * New Win8-style Myanmar shaper,
+  * New South-East Asian shaper for Tai Tham, Cham, and New Tai Lue,
+  * Smartly ignore Default_Ignorable characters (joiners, etc) wheb
+    matching GSUB/GPOS lookups,
+  * Fix 'Phags-Pa U+A872 shaping,
+  * Fix partial disabling of default-on features,
+  * Allow disabling of TrueType kerning.
+- Fix possible crasher with broken fonts with overlapping tables.
+- Removed generated files from git again.  So, one needs ragel to
+  bootstrap from the git tree.
+
+API changes:
+- hb_shape() and related APIs now abort if buffer direction is
+  HB_DIRECTION_INVALID.  Previously, hb_shape() was calling
+  hb_buffer_guess_segment_properties() on the buffer before
+  shaping.  The heuristics in that function are fragile.  If the
+  user really wants the old behvaior, they can call that function
+  right before calling hb_shape() to get the old behavior.
+- hb_blob_create_sub_blob() always creates sub-blob with
+  HB_MEMORY_MODE_READONLY.  See comments for the reason.
+
+
+Overview of changes leading to 0.9.12
+Thursday, January 18, 2013
+=====================================
+
+- Build fixes for Sun compiler.
+- Minor bug fix.
+
+Overview of changes leading to 0.9.11
+Thursday, January 10, 2013
+=====================================
+
+- Build fixes.
+- Fix GPOS mark attachment with null Anchor offsets.
+- [Indic] Fix old-spec reordering of viramas if sequence ends in one.
+- Fix multi-threaded shaper data creation crash.
+- Add atomic ops for Solaris.
+
+API changes:
+- Rename hb_buffer_clear() to hb_buffer_clear_contents().
+
+
+Overview of changes leading to 0.9.10
+Thursday, January 3, 2013
+=====================================
+
+- [Indic] Fixed rendering of Malayalam dot-reph
+- Updated OT language tags.
+- Updated graphite2 backend.
+- Improved hb_ot_layout_get_size_params() logic.
+- Improve hb-shape/hb-view help output.
+- Fixed hb-set.h implementation to not crash.
+- Fixed various issues with hb_ot_layout_collect_lookups().
+- Various build fixes.
+
+New API:
+
+hb_graphite2_face_get_gr_face()
+hb_graphite2_font_get_gr_font()
+hb_coretext_face_get_cg_font()
+
+Modified API:
+
+hb_ot_layout_get_size_params()
+
+
+Overview of changes leading to 0.9.9
+Wednesday, December 5, 2012
+====================================
+
+- Fix build on Windows.
+- Minor improvements.
+
+
+Overview of changes leading to 0.9.8
+Tuesday, December 4, 2012
+====================================
+
+
+- Actually implement hb_shape_plan_get_shaper ().
+- Make UCDB data tables const.
+- Lots of internal refactoring in OTLayout tables.
+- Flesh out hb_ot_layout_lookup_collect_glyphs().
+
+New API:
+
+hb_ot_layout_collect_lookups()
+hb_ot_layout_get_size_params()
+
+
+Overview of changes leading to 0.9.7
+Sunday, November 21, 2012
+====================================
+
+
+HarfBuzz "All-You-Can-Eat-Sushi" (aka Vancouver) Hackfest and follow-on fixes.
+
+- Fix Arabic contextual joining using pre-context text.
+- Fix Sinhala "split matra" mess.
+- Fix Khmer shaping with broken fonts.
+- Implement Thai "PUA" shaping for old fonts.
+- Do NOT route Kharoshthi script through the Indic shaper.
+- Disable fallback positioning for Indic and Thai shapers.
+- Misc fixes.
+
+
+hb-shape / hb-view changes:
+
+- Add --text-before and --text-after
+- Add --bot / --eot / --preserve-default-ignorables
+- hb-shape --output-format=json
+
+
+New API:
+
+hb_buffer_clear()
+
+hb_buffer_flags_t
+
+HB_BUFFER_FLAGS_DEFAULT
+HB_BUFFER_FLAG_BOT
+HB_BUFFER_FLAG_EOT
+HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES
+
+hb_buffer_set_flags()
+hb_buffer_get_flags()
+
+HB_BUFFER_SERIALIZE_FLAGS
+hb_buffer_serialize_glyphs()
+hb_buffer_deserialize_glyphs()
+hb_buffer_serialize_list_formats()
+
+hb_set_add_range()
+hb_set_del_range()
+hb_set_get_population()
+hb_set_next_range()
+
+hb_face_[sg]et_glyph_count()
+
+hb_segment_properties_t
+HB_SEGMENT_PROPERTIES_DEFAULT
+hb_segment_properties_equal()
+hb_segment_properties_hash()
+
+hb_buffer_set_segment_properties()
+hb_buffer_get_segment_properties()
+
+hb_ot_layout_glyph_class_t
+hb_ot_layout_get_glyph_class()
+hb_ot_layout_get_glyphs_in_class()
+
+hb_shape_plan_t
+hb_shape_plan_create()
+hb_shape_plan_create_cached()
+hb_shape_plan_get_empty()
+hb_shape_plan_reference()
+hb_shape_plan_destroy()
+hb_shape_plan_set_user_data()
+hb_shape_plan_get_user_data()
+hb_shape_plan_execute()
+hb_shape_plan_get_shaper()
+
+hb_ot_shape_plan_collect_lookups()
+
+
+API changes:
+
+- Remove "mask" parameter from hb_buffer_add().
+- Rename hb_ot_layout_would_substitute_lookup() and hb_ot_layout_substitute_closure_lookup().
+- hb-set.h API const correction.
+- Renamed hb_set_min/max() to hb_set_get_min/max().
+- Rename hb_ot_layout_feature_get_lookup_indexes() to hb_ot_layout_feature_get_lookups().
+- Rename hb_buffer_guess_properties() to hb_buffer_guess_segment_properties().
+
+
+
+Overview of changes leading to 0.9.6
+Sunday, November 13, 2012
+====================================
+
+- Don't clear pre-context text if no new context is provided.
+- Fix ReverseChainingSubstLookup, which was totally borked.
+- Adjust output format of hb-shape a bit.
+- Include config.h.in in-tree.  Makes it easier for alternate build systems.
+- Fix hb_buffer_set_length(buffer, 0) invalid memory allocation.
+- Use ICU LayoutEngine's C API instead of C++.  Avoids much headache.
+- Drop glyphs for all of Unicode Default_Ignorable characters.
+- Misc build fixes.
+
+Arabic shaper:
+- Enable 'dlig' and 'mset' features in Arabic shaper.
+- Implement 'Phags-pa shaping, improve Mongolian.
+
+Indic shaper:
+- Decompose Sinhala split matras the way old HarfBuzz / Pango did.
+- Initial support for Consonant Medials.
+- Start adding new-style Myanmar shaping.
+- Make reph and 'pref' logic introspect the font.
+- Route Meetei-Mayek through the Indic shaper.
+- Don't apply 'liga' in Indic shaper.
+- Improve Malayalam pre-base reordering Ra interaction with Chillus.
+
+
+
 Overview of changes leading to 0.9.5
 Sunday, October 14, 2012
 ====================================

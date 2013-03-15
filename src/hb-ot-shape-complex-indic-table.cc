@@ -6,16 +6,15 @@
  *
  * on files with these headers:
  *
- * # IndicSyllabicCategory-6.1.0.txt
- * # Date: 2011-08-31, 23:54:00 GMT [KW]
- * # IndicMatraCategory-6.1.0.txt
- * # Date: 2011-08-31, 23:50:00 GMT [KW]
- * # Blocks-6.1.0.txt
- * # Date: 2011-06-14, 18:26:00 GMT [KW, LI]
+ * # IndicSyllabicCategory-6.2.0.txt
+ * # Date: 2012-05-15, 21:12:00 GMT [KW]
+ * # IndicMatraCategory-6.2.0.txt
+ * # Date: 2012-05-15, 21:10:00 GMT [KW]
+ * # Blocks-6.2.0.txt
+ * # Date: 2012-05-14, 22:42:00 GMT [KW, LI]
  */
 
-#ifndef HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH
-#define HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH
+#include "hb-ot-shape-complex-indic-private.hh"
 
 
 #define ISC_A	INDIC_SYLLABIC_CATEGORY_AVAGRAHA		/*  11 chars; Avagraha */
@@ -807,8 +806,8 @@ static const INDIC_TABLE_ELEMENT_TYPE indic_table[] = {
 
 }; /* Table occupancy: 60% */
 
-static INDIC_TABLE_ELEMENT_TYPE
-get_indic_categories (hb_codepoint_t u)
+INDIC_TABLE_ELEMENT_TYPE
+hb_indic_get_categories (hb_codepoint_t u)
 {
   if (0x0900 <= u && u <= 0x10A0) return indic_table[u - 0x0900 + indic_offset_0x0900];
   if (0x1700 <= u && u <= 0x1800) return indic_table[u - 0x1700 + indic_offset_0x1700];
@@ -866,7 +865,5 @@ get_indic_categories (hb_codepoint_t u)
 #undef IMC_TLR
 #undef IMC_TR
 #undef IMC_VOL
-
-#endif /* HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH */
 
 /* == End of generated table == */
